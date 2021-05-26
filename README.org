@@ -30,6 +30,51 @@
 		 nmcli connection import type openvpn file tryhackme/JoltedSloth.ovpn
 	 #+end_src
 
+* Reconnaissance
+** Google Dorking
+
+	 It's legal! It's all index, publicy available information.
+
+*** Basic Operators
+
+		| Operator                        | Description                                |
+		|---------------------------------+-------------------------------------------|
+		| Single word vs. combining words | batman / batman dark knight                |
+		| Using the ""                    | "dark knight" batman                       |
+		| Boolean operators               | batman AND "dark knight"                   |
+		| Special Characters              | batman -joker, batman | "dark knight"     |
+
+*** Advanced Operators
+
+		| Operator    | Action                                                                     |
+		|-------------+----------------------------------------------------------------------------|
+		| cache:      | Displays Google's cached version.                                          |
+		| link:       | Shows a list o web pages that have links to your target.                   |
+		| related:    | Smilar web pages.                                                          |
+		| info:       | View information Google has on the target.                                 |
+		| site:       | Limits results to just the domain listed.                                  |
+		| allintitle: | Limits resulst to those *websites* with ALL the search words in the title. |
+		| intitle:    | Limits results to *documents* that contain the search word in the title.   |
+		| allinurl:   | Limits results to only those *webpages* with ALL search words in the URL   |
+		| inurl:      | Limits results to *documents* that contain the search word in the URL.     |
+		| intext:     | Limits results to *documents* that contain the search word in text.        |
+		| filetype:   | Search for a file by its extension                                         |
+
+*** The Google Hacking Database
+
+		https://www.exploit-db.com/google-hacking-database
+
+		The Google Hacking Database (GHDB) is a categorized index of Internet search engine queries designed to uncover interesting, and usually sensitive, information made publicly available on the Internet.
+
+*** Other Google Hacking Tools
+
+		- Goolink Scanner
+		- Google Hack Honeypot
+		- SearchDiggity
+		- GooScan
+		- MetaGoofil
+		- SiteDigger
+
 * Network utilities
 ** nmap                                                             :network:
 
