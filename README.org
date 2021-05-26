@@ -128,6 +128,12 @@
 
 		Note: impacket has scripts that use other protocols and services besides samba. (TryHackMe)
 
+*** sublist3r
+
+	Sublist3r is a python tool designed to enumerate subdomains of websites using OSINT.
+
+	[https://github.com/aboul3la/Sublist3r]
+
 ** Web
 *** nikto                                                   :web:enumeration:
 

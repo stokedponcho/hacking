@@ -1,0 +1,87 @@
+#+TITLE: The Hacker Methodology
+
+* Introduction
+
+	What process does Hacker follow?
+
+	1. Reconnaissance
+	2. Enumeration/Scanning
+	3. Gaining Access
+	4. Privilege Escalation
+	5. Covering Tracks
+	6. Reporting
+
+** Sources
+
+ [https://tryhackme.com/room/hackermethodology]
+ [https://www.pluralsight.com/courses/ethical-hacking-understanding]
+
+* 1. Reconnaissance
+
+	Reconnaissance is all about collecting information about your target, with *no interaction with the target(s) or system(s)*.
+	Reconnaissance usually involves publicly available tools.
+
+   - Google (specifically Google Dorking)
+	 - Wikipedia
+	 - Social media (Twitter/Facebook/LinkedIn...)
+   - PeopleFinder.com
+   - who.is
+   - sublist3r (subdomains enumeration)
+   - hunter.io
+   - builtwith.com
+   - wappalyzer
+
+	Even though it may seem simple, reconnaissance is the *single most important phase of a penetration test*.
+
+	[https://tryhackme.com/room/googledorking]
+
+* 2. Enumeration and Scanning
+
+	This where interactions with the target start, to attempt to find vulnerabilities and determine its overrall *attack surface*.
+
+	This is where specialized tools are used to try to find vulnerabilities in a target. These vulnerabilities might be a range of things: anything from a webpage not being properly locked down, a website leaking information, SQL Injection, Cross Site Scripting among many others.
+
+* 3. Exploitation
+
+	Attempt at exploiting a vulnerability and gaining access into the target.
+
+	*A professional penetration tester never jumps into the exploitation phase without doing adequate reconnaissance and enumeration.*
+
+* 4. Privilege Escalation
+
+	After gaining access to a machine via the *exploitation* phase, the next step is to *escalate privileges* to a higher user account:
+	- In the Windows world, the target account is usually: *Administrator or System*
+	- In the Linux world, the target account is usually: *root*
+
+	There are many forms of privilege escalation, some examples are:
+	- Cracking password hashes found on the target
+	- Escalate through a vulnerable service
+	- Using default credentials
+	- Password spraying of previously discovered credentials (password re-use)
+	- Finding secret keys or SSH keys stored on a device which will allow pivoting to another machine
+	- Enumerating the system to find network settings or any commands that can be run as root/Administrator/System
+	- ...
+
+* 5. Covering Tracks
+
+	As a professional pentester, you should have explicit permission from the system owner regarding when the test is happening, how it is occuring and the scope of targets.
+
+	The penetration test should stop immediately when privilege escalation has been achieved and report findings to the client.
+
+	While ethical hackers rarely have a need to cover their tracks, you still must carefully record and note all tasks performed as part of the penetration test to assist in fixing the vulnerabilities discovered and recommend changes to the system owner.
+
+* 6. Reporting
+
+	The final and one of the most important phases, outlining everything that was found:
+	- Finding(s) and/or Vulnerabilities
+	- CRITICALITY of findings
+	- Description or brief overview of how it was discovered
+	- Remediation recommendations
+
+	The amount of reporting documentation varies widely by the type of engagement that the pentester is involved in. A findings report generally goes in three formats:
+	- Vulnerability scan results (a simple listing of vulnerabilities)
+	- Findings summary (list of the findings as outlined above)
+	- Full formal report
+
+	An example of a full format report sample:
+	[https://github.com/hmaverickadams/TCM-Security-Sample-Pentest-Report]
