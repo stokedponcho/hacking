@@ -2,14 +2,14 @@
 
 [https://blog.tryhackme.com/free_path/]
 
-* Level 1 - Intro [4/9]
+* Level 1 - Intro [5/9]
 
 - [X] OpenVPN https://tryhackme.com/room/openvpn
 - [X] Welcome https://tryhackme.com/jr/welcome
 - [X] Intro to Researching https://tryhackme.com/room/introtoresearch
 - [ ] The Hacker Methodology https://tryhackme.com/room/hackermethodology
 - [X] Learn Linux https://tryhackme.com/module/linux-fundamentals
-- [ ] Crash Course Pentesting https://tryhackme.com/room/ccpentesting
+- [X] Crash Course Pentesting https://tryhackme.com/room/ccpentesting
 
 **Introductory CTFs to get your feet wet**
 
