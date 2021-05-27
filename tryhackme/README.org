@@ -18,11 +18,11 @@
 - [X] OHsint https://tryhackme.com/room/ohsint
 - [X] Shodan.io https://tryhackme.com/room/shodan
 
-* Level 2 - Tooling [1/15]
+* Level 2 - Tooling [3/15]
 
-- [ ] Tmux https://tryhackme.com/room/rptmux
+- [X] Tmux https://tryhackme.com/room/rptmux
 - [X] Nmap https://tryhackme.com/room/furthernmap
-- [ ] Web Scanning https://tryhackme.com/room/rpwebscanning
+- [X] Web Scanning https://tryhackme.com/room/rpwebscanning
 - [ ] Sublist3r https://tryhackme.com/room/rpsublist3r
 - [ ] Metasploit https://tryhackme.com/room/rpmetasploit
 - [ ] Hydra https://tryhackme.com/room/hydra

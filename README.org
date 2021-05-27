@@ -1,5 +1,5 @@
 #+TITLE: Hacking - README
-#+STARTUP:CONTENT
+#+STARTUP:TITLE
 
 * Setup
 ** Guest
@@ -226,15 +226,16 @@
 		`nikto` is a popular web scanning tool that allows users to find common web vulnerabilities. It is commonly used to check for common CVE's such as shellshock, and to get general information about the web server that you're enumerating. (TryHackMe)
 		#+end_quote
 
-
-		#+begin_src shell
-
-		#+end_src
-
-	 | Switch    | Description                                     | Example           |
-	 |-----------+-------------------------------------------------+-------------------|
-	 | -h, -host | Host(s) to target                               | -host 192.168.1.1 |
-	 | -id       | ID and password to use for basic authentication | -id "id:passwod"  |
+	 | Option        | Description                                     | Example           |
+	 |---------------+-------------------------------------------------+-------------------|
+	 | -h, -host     | Host(s) to target                               | -host 192.168.1.1 |
+	 | -id           | ID and password to use for basic authentication | -id "id:passwod"  |
+	 | -p            | Set port to scan                                |                   |
+	 | -ssl          | Only test SSL on the ports specified            |                   |
+	 | -nossl        | Do not use SSL to connect to the server         |                   |
+	 | -until        | Run until the specified time or duration        |                   |
+	 | -list-plugins | List all plugins available                      |                   |
+	 | -Plugins      | Select which plugins to run on the target       | -Plugins outdated |
 
 *** dirsearch                                               :web:enumeration:
 
@@ -277,6 +278,14 @@
 		 | Flag | Description                     |
 		 |------+---------------------------------|
 		 | -x   | File extension(s) to search for |
+
+*** OWASP Zap Scanner
+
+		ZAP is an easy to use integrated penetration testing tool for finding vulnerabilities in web applications.
+
+		In Kali Linux, can be started with 'owasp-zap', 'zaproxy' or via the GUI (menu).
+
+		Set 'URL to attack'.
 
 * Exploitation
 ** Reverse shells
