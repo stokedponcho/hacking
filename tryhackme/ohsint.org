@@ -1,0 +1,14 @@
+#+TITLE: TryHackMe - OhSINT writeup
+
+The staring point is to use `exiftool` to get metada from the image.
+
+| Question                                     | Relevant information   | Explanation                                             |
+|----------------------------------------------+------------------------+---------------------------------------------------------|
+| What is this users avatar of?                | Copyright of the image | Allows to find a social media account.                  |
+| What city is this person in?                 |                        | Found on github project from copyright name.            |
+| Whats the SSID of the WAP he connected to?   |                        | BSSID is disclosed on the social media account.         |
+| What is his personal email address?          |                        | Found on github project from copyright name.            |
+| What site did you find his email address on? |                        | github                                                  |
+| Whats the SSID of the WAP he connected to?   | BSSID                  | Using Wigle.net, there is a WiFi in London matching.    |
+| Where has he gone on holiday?                | Blog post              | Web search for copyright name shows a wordpress blog.   |
+| What is this persons password?               | Blog post              | Blog post contains it, can be seen in websearch result. |
