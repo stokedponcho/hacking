@@ -75,6 +75,31 @@
 		- MetaGoofil
 		- SiteDigger
 
+** Shodan.io
+
+	 Shodan.io is a search engine for the Internet of Things.
+
+	 [https://www.shodan.io/]
+	 [https://skerritt.blog/shodan/]
+
+	| Operator | Description          | Example       |
+	|----------+----------------------+---------------|
+	| asn:     | Filters on AS Number | asn:ASxxx     |
+	| product: | Filters on product   | product:MYSQL |
+
+*** Dorking
+
+		[https://github.com/humblelad/Shodan-Dorks]
+
+*** API
+
+		[https://developer.shodan.io/api/clients]
+
+*** Browser Extension
+
+	Shodan as a web browser extension.
+	[https://chrome.google.com/webstore/detail/shodan/jjalcfnidlmpjhdfepjhjbhnhkbgleap]
+
 ** WiGLE.net: Wireless Network Mapping
 
 	 WiGLE is a website for collecting information about the different wireless hotspots around the world.

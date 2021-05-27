@@ -1,8 +1,9 @@
 #+TITLE: What rooms should you do? A free guide for beginners.
 
 [https://blog.tryhackme.com/free_path/]
+[https://blog.tryhackme.com/going-from-zero-to-hero/]
 
-* Level 1 - Intro [7/9]
+* Level 1 - Intro [9/9]
 
 - [X] OpenVPN https://tryhackme.com/room/openvpn
 - [X] Welcome https://tryhackme.com/jr/welcome
@@ -14,8 +15,8 @@
 **Introductory CTFs to get your feet wet**
 
 - [X] Google Dorking https://tryhackme.com/room/googledorking
-- [ ] OHsint https://tryhackme.com/room/ohsint
-- [ ] Shodan.io https://tryhackme.com/room/shodan
+- [X] OHsint https://tryhackme.com/room/ohsint
+- [X] Shodan.io https://tryhackme.com/room/shodan
 
 * Level 2 - Tooling [1/15]
 

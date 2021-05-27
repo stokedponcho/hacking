@@ -1,0 +1,26 @@
+#+TITLE: TryHackMe - Shodan writeup
+
+* Google & Filtering
+
+From Google's ip, we can use an ASN lookup to find their ASN number: *15169*.
+
+*What is the top operationg system for MYSQL servers in Google's ASN?*
+*What is the 2nd most popular country for MYSQL servers in Google's ASN?*
+
+Filters: asn:AS15169 product:MYSQL, results: top countries and top versions
+
+*Under Google's ASN, which is more popular for nginx, Hypertext Transfer Protocol or Hypertext Transfer Protocol with SSL?*
+
+Filters: asn:AS15169 product:nginx, results: top ports
+
+*Under Google's ASN, what is the most popular city?*
+
+Filters: asn:AS15169 results: top city via facet analysis
+
+*Under Google's ASN in Los Angeles, what is the top operating system according to Shodan?*
+
+Filters: asn:AS15169 city:"Los Angeles", results: top operating systems
+
+*Using the top Webcam search from the explore page, does Google's ASN have any webcams?*
+
+Filters: asn:AS15169 Server:SQ-WEBCAM, results: any?
