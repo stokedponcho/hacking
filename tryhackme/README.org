@@ -17,13 +17,13 @@
 - [X] Google Dorking https://tryhackme.com/room/googledorking
 - [X] OHsint https://tryhackme.com/room/ohsint
 
-* Level 2 - Tooling [5/14]
+* Level 2 - Tooling [6/14]
 
 - [X] Tmux https://tryhackme.com/room/rptmux
 - [X] Nmap https://tryhackme.com/room/furthernmap
 - [X] Web Scanning https://tryhackme.com/room/rpwebscanning
 - [X] Sublist3r https://tryhackme.com/room/rpsublist3r
-- [ ] Metasploit https://tryhackme.com/room/rpmetasploit
+- [X] Metasploit https://tryhackme.com/room/rpmetasploit
 - [ ] Hydra https://tryhackme.com/room/hydra
 - [ ] Linux Privesc https://tryhackme.com/room/linuxprivesc
 - [X] Shodan.io https://tryhackme.com/room/shodan
