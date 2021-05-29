@@ -1,5 +1,5 @@
 #+TITLE: Hacking - README
-#+STARTUP:TITLE
+#+STARTUP:OVERVIEW
 
 * Setup
 ** Guest
@@ -99,6 +99,22 @@
 
 	Shodan as a web browser extension.
 	[https://chrome.google.com/webstore/detail/shodan/jjalcfnidlmpjhdfepjhjbhnhkbgleap]
+
+** Sublist3r                                     :enumeration:reconnaissance:
+
+ Sublist3r is a Python tool designed to enumerate subdomains of websites using OSINT.
+
+ [https://github.com/aboul3la/Sublist3r]
+
+ *There's a pretty good chance ISPs are not going to like recon activities and neither will most search engines. Unlikely to get into trouble, however, Google is likely to impose a temporary CAPTCHA imposed on searches in the following hour.*
+
+ An alternative is to use [https://dnsdumpster.com/].
+
+| Switch        | Description                                       |
+|---------------+---------------------------------------------------|
+| -d, --domain  | Domain name to enumerate subdomains of            |
+| -e, --engines | Specifiy a commma-separaed list of search engines |
+| -o, --output  | Save the result to text file                      |
 
 ** WiGLE.net: Wireless Network Mapping
 
@@ -206,19 +222,13 @@
 		| -p     | Password to authenticate with       |
 		| -N     | Suppress the normal password prompt |
 
-*** impacket
+*** impacket                                                    :enumeration:
 
 		Impacket is a collection of Python classes for working with network protocols, with a collection of extremely useful windows scripts.
 
 		[https://github.com/SecureAuthCorp/impacket]
 
 		Note: impacket has scripts that use other protocols and services besides samba. (TryHackMe)
-
-*** sublist3r
-
-	Sublist3r is a python tool designed to enumerate subdomains of websites using OSINT.
-
-	[https://github.com/aboul3la/Sublist3r]
 
 ** Web
 *** nikto                                                   :web:enumeration:

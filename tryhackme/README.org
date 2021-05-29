@@ -16,19 +16,17 @@
 
 - [X] Google Dorking https://tryhackme.com/room/googledorking
 - [X] OHsint https://tryhackme.com/room/ohsint
-- [X] Shodan.io https://tryhackme.com/room/shodan
 
-* Level 2 - Tooling [3/15]
+* Level 2 - Tooling [5/14]
 
 - [X] Tmux https://tryhackme.com/room/rptmux
 - [X] Nmap https://tryhackme.com/room/furthernmap
 - [X] Web Scanning https://tryhackme.com/room/rpwebscanning
-- [ ] Sublist3r https://tryhackme.com/room/rpsublist3r
+- [X] Sublist3r https://tryhackme.com/room/rpsublist3r
 - [ ] Metasploit https://tryhackme.com/room/rpmetasploit
 - [ ] Hydra https://tryhackme.com/room/hydra
 - [ ] Linux Privesc https://tryhackme.com/room/linuxprivesc
-- [ ] Web Scanning https://tryhackme.com/room/rpwebscanning
-- [ ] Shodan https://tryhackme.com/room/shodan
+- [X] Shodan.io https://tryhackme.com/room/shodan
 - [ ] RustScan (I invented RustScan so excuse the self-promo) https://tryhackme.com/room/rustscan
 
 **More introductory CTFs**
