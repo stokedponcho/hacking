@@ -329,36 +329,71 @@
 	[https://www.fuzzysecurity.com/tutorials/16.html]
 	[https://github.com/PowerShellEmpire/PowerTools/tree/master/PowerUp]
 	[https://github.com/411Hall/JAWS]
-* Hash Cracking
+* Cracking
+** Remote
+*** Hydra
 
-	Note: Different hashing algorithms treat salts differently. Some prepend them and some append them. Research what it is you're trying to crack, and make the distinction. (TryHackMe)
+		Hydra is a brute force online password cracking program; a quick system login password 'hacking' tool. (TryHackMe)
 
-** hashid                                                          :cracking:
+		- https://github.com/vanhauser-thc/thc-hydra
+		- https://en.kali.tools/?p=220&PageSpeed=noscript
 
-	 Identify the different types of hashes used to encrypt data.
+**** SSH
 
-** hashcat                                                         :cracking:
+		 #+begin_src shell
+			 hydra -l <username> -P <path to passwords> 192.168.1.1 -t 4 ssh
+		 #+end_src
 
-	 [https://hashcat.net/wiki/doku.php?id=example_hashes]
+		 | Option | Description                                   |
+		 |--------+-----------------------------------------------|
+		 | -l, -L | LOGIN or FILE containing several logins       |
+		 | -p, -P | PASSWORD or FILE containing several passwords |
+		 | -t     | number of threads to use                      |
 
-	 | Flag | Description               |
-	 |------+---------------------------|
-	 | -m   | Sets the mode (hash-type) |
-	 | -a   | Sets the attack mode      |
+**** Web Form
 
-** John the Ripper                                                 :cracking:
+		 #+begin_src shell
+			 hydra -l <username> -P <path to passwords> 192.168.1.1 http[s]-{get|post}-form "/login:username=^USER^&password=^PASS^:F=incorrect" -V
+		 #+end_src
 
-	 Cracking zip file.
+		 | Option           | Description                                   |
+		 |------------------+-----------------------------------------------|
+		 | -l, -L           | LOGIN or FILE containing several logins       |
+		 | -p, -P           | PASSWORD or FILE containing several passwords |
+		 | :username=^USER^ | username form field and placeholder           |
+		 | :password=^PASS^ | password form field and placeholder           |
+		 | :F=incorrect     | incorrect password response                   |
 
-	 #+begin_src shell
-		 zip2john target.zip > target.zip.hashes
-		 john target.zip.hashes -w /usr/share/wordlists/rockyou.txt
-	 #+end_src
+** Hash Cracking
 
-	 | Flag           | Description                                        |
-	 |----------------+----------------------------------------------------|
-	 | -format:FORMAT | Allows to override the ciphertext format detection |
-	 | -wordlist:FILE | Enable the wordlist mode, reading words from FILE. |
+	 Note: Different hashing algorithms treat salts differently. Some prepend them and some append them. Research what it is you're trying to crack, and make the distinction. (TryHackMe)
+
+*** hashid                                                         :cracking:
+
+		Identify the different types of hashes used to encrypt data.
+
+*** hashcat                                                        :cracking:
+
+		[https://hashcat.net/wiki/doku.php?id=example_hashes]
+
+		| Flag | Description               |
+		|------+---------------------------|
+		| -m   | Sets the mode (hash-type) |
+		| -a   | Sets the attack mode      |
+
+*** John the Ripper                                                :cracking:
+
+		Cracking zip file.
+
+		#+begin_src shell
+			zip2john target.zip > target.zip.hashes
+			john target.zip.hashes -w /usr/share/wordlists/rockyou.txt
+		#+end_src
+
+		| Flag           | Description                                        |
+		|----------------+----------------------------------------------------|
+		| -format:FORMAT | Allows to override the ciphertext format detection |
+		| -wordlist:FILE | Enable the wordlist mode, reading words from FILE. |
 
 * SQL Injection
 *** sqlmap                                                        :injection:
