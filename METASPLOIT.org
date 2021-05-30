@@ -1,5 +1,5 @@
 #+TITLE: Metasploit Framework
-#+TAGS: :framework:metasploit:
+#+FILETAGS: :framework:metasploit:
 
 	Metasploit is one of the most popular penetration testing frameworks around. It contains a large database of almost every major CVE, which you can easily use against a machine. (TryHackMe).
 

