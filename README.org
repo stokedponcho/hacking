@@ -288,7 +288,7 @@
 	 | dir      | Uses directory/file enumeration mode | gobuster dir -u http://192.168.1.1 |
 
 	 | Flag           | Description |
-	 |----------------+-------------kt|
+	 |----------------+-------------|
 	 | -w, --wordlist |             |
 
 **** dir

