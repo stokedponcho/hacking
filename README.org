@@ -310,6 +310,21 @@
 
 	 In Kali, there are some in `/usr/share/webshells`.
 
+** searchsploit
+
+	 Allows to search through exploits and shellcodes using one or more terms from Exploit-DB.
+
+	 In Kali, files are located under '/usr/shared/exploitdb'.
+
+	 #+begin_src shell
+		 searchsploit wordpress
+	 #+end_src
+
+	 | Option       | Description                                            |
+	 |--------------+--------------------------------------------------------|
+	 | -w, --www    | Show URLs to exploit-db.com rather than the local path |
+	 | -m, --mirror | Copy an expoit to the current directory                |
+
 * Privilege escalation
 ** Linux
 
