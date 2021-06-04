@@ -17,7 +17,7 @@
 - [X] Google Dorking https://tryhackme.com/room/googledorking
 - [X] OHsint https://tryhackme.com/room/ohsint
 
-* Level 2 - Tooling [13/14]
+* Level 2 - Tooling [14/14]
 
 - [X] Tmux https://tryhackme.com/room/rptmux
 - [X] Nmap https://tryhackme.com/room/furthernmap
@@ -35,7 +35,7 @@
 - [X] Blue - https://tryhackme.com/room/blue
 - [X] Simple CTF https://tryhackme.com/room/easyctf
 - [X] Bounty Hacker https://tryhackme.com/room/cowboyhacker
-- [ ] Brute It https://tryhackme.com/room/bruteit
+- [X] Brute It https://tryhackme.com/room/bruteit
 
 * Level 3 - Crypto & Hashes with CTF practice [0/6]
 

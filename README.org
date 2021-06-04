@@ -406,17 +406,25 @@
 
 *** John the Ripper                                                :cracking:
 
+		| Flag           | Description                                        |
+		|----------------+----------------------------------------------------|
+		| -list:formats  | List available formats                             |
+		| -format:FORMAT | Allows to override the ciphertext format detection |
+		| -wordlist:FILE | Enable the wordlist mode, reading words from FILE. |
+
+		Some file types can be "converted to hash" crackable by john with the following tools:
+		- zip2john
+		- gpg2john
+		- /usr/share/john: collection of scripts for many other (ssh, luks, 7z...)
+
+**** Example
+
 		Cracking zip file.
 
 		#+begin_src shell
 			zip2john target.zip > target.zip.hashes
 			john target.zip.hashes -w /usr/share/wordlists/rockyou.txt
 		#+end_src
-
-		| Flag           | Description                                        |
-		|----------------+----------------------------------------------------|
-		| -format:FORMAT | Allows to override the ciphertext format detection |
-		| -wordlist:FILE | Enable the wordlist mode, reading words from FILE. |
 
 * SQL Injection
 *** sqlmap                                                        :injection:

