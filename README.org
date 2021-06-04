@@ -391,22 +391,43 @@
 
 	 Note: Different hashing algorithms treat salts differently. Some prepend them and some append them. Research what it is you're trying to crack, and make the distinction. (TryHackMe)
 
+	 Tools to identify hashes: hashid, hash-identifier.
+
 *** hashid                                                         :cracking:
 
 		Identify the different types of hashes used to encrypt data.
 
+		#+begin_src shell
+			hashid 48bb6e862e54f2a795ffc4e541caed4d -m
+		#+end_src
+
+		| Option     | Description                                       |
+		|------------+---------------------------------------------------|
+		| -m, --mode | Show corresponding Hashcat mode in output         |
+		| -j, --john | Show corresponding John The Ripper mode in output |
+
 *** hashcat                                                        :cracking:
 
-		[https://hashcat.net/wiki/doku.php?id=example_hashes]
+		 Hashcat is the world’s fastest CPU-based password recovery tool.
 
-		| Flag | Description               |
+		#+begin_src shell
+			hashcat -m 1000 48bb6e862e54f2a795ffc4e541caed4d /usr/share/wordlist/rockyou.txt
+		#+end_src
+
+		| Option | Description               |
 		|------+---------------------------|
 		| -m   | Sets the mode (hash-type) |
 		| -a   | Sets the attack mode      |
 
+		Lists of hash and attack mode can be seen in the manual, or on the website.
+
+		[https://hashcat.net/wiki/doku.php?id=example_hashes]
+
 *** John the Ripper                                                :cracking:
 
-		| Flag           | Description                                        |
+		john,  better  known  as  John the Ripper, is a tool to find weak passwords of users in a server.
+
+		| Option         | Description                                        |
 		|----------------+----------------------------------------------------|
 		| -list:formats  | List available formats                             |
 		| -format:FORMAT | Allows to override the ciphertext format detection |
