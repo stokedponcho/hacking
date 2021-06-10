@@ -192,6 +192,14 @@
 	 Capable of scanning targets in less than a second, extensible scripting language allowing you to write scripts in Python, and more. (TryHackMe)
 
 * Multimedia
+** binwalk
+
+	 `binwalk` tool for searching binary images for embedded files and executable code.
+
+	 | Option        | Description                            |
+	 |---------------+----------------------------------------|
+	 | -e, --extract | Automatically extract known file types |
+
 ** exiftool
 
 	 ExifTool is a free and open-source software program for reading, writing, and manipulating image, audio, video, and PDF metadata.
@@ -200,6 +208,12 @@
 		 sudo apt install exiftool
 		 exiftool image
 	 #+end_src
+
+** tineye.com
+
+	Reverse image search.
+
+	[https://tineye.com/]
 
 * Enumeration
 ** Samba
@@ -361,10 +375,10 @@
 		- https://github.com/vanhauser-thc/thc-hydra
 		- https://en.kali.tools/?p=220&PageSpeed=noscript
 
-**** SSH
+**** FTP/SSH
 
 		 #+begin_src shell
-			 hydra -l <username> -P <path to passwords> 192.168.1.1 -t 4 ssh
+			 hydra -l <username> -P <path to passwords> 192.168.1.1 [-t 4] ftp|ssh
 		 #+end_src
 
 		 | Option | Description                                   |
@@ -444,7 +458,7 @@
 
 		#+begin_src shell
 			zip2john target.zip > target.zip.hashes
-			john target.zip.hashes -w /usr/share/wordlists/rockyou.txt
+			john target.zip.hashes -wordlist:/usr/share/wordlists/rockyou.txt
 		#+end_src
 
 * SQL Injection
@@ -469,3 +483,30 @@
 		| -T          | Table to enumerate                                 |
 		| -C          | Column to enumerate                                |
 		| --os-shell  | Prompt for an interative operating system shell    |
+* Steganography
+
+	#+begin_quote
+	Steganography is the practice of concealing a message within another message or a physical object. In computing/electronic contexts, a computer file, message, image, or video is concealed within another file, message, image, or video.
+	- Wikipedia
+	#+end_quote
+
+** Steghide
+
+	 `steghide` is a steganography program that is able to hide data in various kinds of image and audio files.
+
+	 #+begin_src shell
+		 sudo apt install steghide # available in Kali repos
+
+		 steghide info image.jpeg
+		 steghide extract -sf image.jpex
+	 #+end_src
+
+** Stegseek
+
+	 Stegseek is a lightning fast steghide cracker that can be used to extract hidden data from files.
+
+	https://github.com/RickdeJager/stegseek
+
+	#+begin_src shell
+			stegseek <file> <wordlist>
+	#+end_src
